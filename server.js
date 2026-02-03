@@ -20,6 +20,13 @@ const MIME_TYPES = {
   '.json': 'application/json; charset=utf-8'
 };
 
+function resolveStoragePath(locationOfFile) {
+  if (!locationOfFile) return null;
+  const absolute = path.resolve(ROOT, locationOfFile);
+  if (!absolute.startsWith(ROOT)) return null;
+  return absolute;
+}
+
 async function walkForDescriptions(dir) {
   const entries = await readDir(dir);
   const collected = [];
@@ -56,6 +63,19 @@ function buildDatasetSummary(data, filePath) {
             ? data.dataType.numberOfSNP
             : undefined));
 
+  const infoOfGenotype = typeof data['informationOfGenotype(Gb)'] === 'number'
+    ? data['informationOfGenotype(Gb)']
+    : null;
+  const storageLocation = data.storage && data.storage.locationOfFile
+    ? data.storage.locationOfFile
+    : null;
+  const storageAbsolute = resolveStoragePath(storageLocation);
+  let storageFileAvailable = false;
+  if (storageAbsolute && existsSync(storageAbsolute)) {
+    const storageStats = fs.statSync(storageAbsolute);
+    storageFileAvailable = storageStats.isFile();
+  }
+
   return {
     id: data.id || path.basename(filePath),
     name: dataset.name || 'Unnamed dataset',
@@ -70,10 +90,12 @@ function buildDatasetSummary(data, filePath) {
       return detail || data.version || '';
     })(),
     numberOfData: typeof numberOfData === 'number' ? numberOfData : null,
+    informationOfGenotypeGb: infoOfGenotype,
     dataType: data.dataType && data.dataType.type ? data.dataType.type : null,
-    storagePath: data.storage && data.storage.locationOfFile
-      ? data.storage.locationOfFile
-      : path.dirname(path.relative(DATASET_ROOT, filePath)),
+    storagePath: storageLocation
+      || path.dirname(path.relative(DATASET_ROOT, filePath)),
+    storageDownloadPath: storageLocation,
+    storageFileAvailable,
     generatedAt: data.generatedAt || null,
     relatedGenotype: data.relatedGenotype || null,
     filePath: path.relative(DATASET_ROOT, filePath)
@@ -142,6 +164,32 @@ async function serveApi(req, res) {
   }
 }
 
+function serveDownload(req, res) {
+  const requestUrl = new URL(req.url, `http://${req.headers.host}`);
+  const requestedPath = requestUrl.searchParams.get('path');
+  const absolute = resolveStoragePath(requestedPath);
+
+  if (!absolute || !existsSync(absolute)) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('파일이 존재하지 않습니다.');
+    return;
+  }
+
+  const stats = fs.statSync(absolute);
+  if (!stats.isFile()) {
+    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+    res.end('파일이 존재하지 않습니다.');
+    return;
+  }
+
+  const filename = path.basename(absolute);
+  res.writeHead(200, {
+    'Content-Type': 'application/octet-stream',
+    'Content-Disposition': `attachment; filename="${filename}"`
+  });
+  createReadStream(absolute).pipe(res);
+}
+
 function serveStatic(req, res) {
   const urlPath = req.url === '/' ? '/index.html' : req.url.split('?')[0];
   const filePath = path.join(PUBLIC_DIR, path.normalize(urlPath));
@@ -159,6 +207,10 @@ function serveStatic(req, res) {
 }
 
 const server = http.createServer((req, res) => {
+  if (req.url.startsWith('/api/download')) {
+    serveDownload(req, res);
+    return;
+  }
   if (req.url.startsWith('/api/datasets')) {
     serveApi(req, res);
     return;

@@ -1,0 +1,22 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "CNU-genotype-v1",
+  "version": "1.0.0",
+  "dataset": {
+    "name": "CNU",
+    "type": "genotype",
+    "crop": "cabbage",
+    "cropCode": "CAB"
+  },
+  "numberOfData": 100,
+  "informationOfGenotype(Gb)": 1000,
+  "dataType": {
+    "type": "SNP",
+    "numberOfSNP": 1048575
+  },
+  "storage": {
+    "locationOfFile": "./dataset/cabbage/CNU/genotype/Bi.dp15.gq30_call0.4.miss1.recode.vcf.gz",
+    "fileType": "vcf"
+  },
+  "generatedAt": "2025-12-27T19:11:29+09:00"
+}

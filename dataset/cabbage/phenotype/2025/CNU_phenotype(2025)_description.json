@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "1.0.0",
+  "id": "CNU-phenotype-v1",
+  "version": "1.0.0",
+  "dataset": {
+    "name": "CNU",
+    "type": "phenotype",
+    "crop": "cabbage",
+    "cropCode": "CAB"
+  },
+  "numberOfData": 100,
+  "dataType": {
+    "type": "phenotype",
+    "numberOfPhenotype": 1
+  },
+  "storage": {
+    "locationOfFile": "./dataset/cabbage/CNU/phenotype/2025/",
+    "fileType": "csv"
+  },
+  "relatedGenotype": {
+    "name": "CNU",
+    "type": "genotype"
+  },
+  "generatedAt": "2025-12-27T19:11:29+09:00"
+}

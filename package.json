@@ -1,0 +1,10 @@
+{
+  "name": "brai-data-dashboard",
+  "version": "1.0.0",
+  "description": "Dataset description dashboard for genotype and phenotype files.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "dependencies": {}
+}

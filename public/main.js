@@ -12,6 +12,7 @@ function cropIcon(crop) {
   const name = (crop || '').toLowerCase();
   if (name.indexOf('tomato') !== -1 || name.indexOf('토마토') !== -1) return '🍅';
   if (name.indexOf('cabbage') !== -1 || name.indexOf('양배추') !== -1) return '🥬';
+  if (name.indexOf('pepper') !== -1 || name.indexOf('고추') !== -1) return '🌶️';
   return '🗂️';
 }
 
@@ -63,8 +64,11 @@ function renderDatasets(datasets) {
     const typeChip = clone.querySelector('.type-chip');
     const meta = clone.querySelector('.meta');
     const count = clone.querySelector('.count');
+    const genotypeInfo = clone.querySelector('.genotype-info');
+    const genotypeSize = clone.querySelector('.genotype-size');
     const datatype = clone.querySelector('.datatype');
     const storage = clone.querySelector('.storage');
+    const download = clone.querySelector('.download');
     const generated = clone.querySelector('.generated');
     const filePath = clone.querySelector('.filepath');
     const relatedContainer = clone.querySelector('.related');
@@ -83,8 +87,25 @@ function renderDatasets(datasets) {
     count.textContent = typeof dataset.numberOfData === 'number'
       ? dataset.numberOfData.toLocaleString()
       : '-';
+    if (typeof dataset.informationOfGenotypeGb === 'number') {
+      genotypeInfo.hidden = false;
+      genotypeSize.textContent = dataset.informationOfGenotypeGb.toLocaleString();
+    } else {
+      genotypeInfo.hidden = true;
+      genotypeSize.textContent = '-';
+    }
     datatype.textContent = dataset.dataType || '-';
     storage.textContent = dataset.storagePath;
+    if (dataset.storageFileAvailable && dataset.storageDownloadPath) {
+      const link = document.createElement('a');
+      link.href = `/api/download?path=${encodeURIComponent(dataset.storageDownloadPath)}`;
+      link.textContent = '다운로드';
+      link.setAttribute('download', '');
+      download.innerHTML = '';
+      download.appendChild(link);
+    } else {
+      download.textContent = '파일이 존재하지 않습니다.';
+    }
     generated.textContent = formatDate(dataset.generatedAt);
     filePath.textContent = dataset.filePath;
 

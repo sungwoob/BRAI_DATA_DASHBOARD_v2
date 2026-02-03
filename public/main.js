@@ -12,6 +12,7 @@ function cropIcon(crop) {
   const name = (crop || '').toLowerCase();
   if (name.indexOf('tomato') !== -1 || name.indexOf('토마토') !== -1) return '🍅';
   if (name.indexOf('cabbage') !== -1 || name.indexOf('양배추') !== -1) return '🥬';
+  if (name.indexOf('pepper') !== -1 || name.indexOf('고추') !== -1) return '🌶️';
   return '🗂️';
 }
 

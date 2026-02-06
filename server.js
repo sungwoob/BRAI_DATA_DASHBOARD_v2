@@ -73,7 +73,7 @@ function buildDatasetSummary(data, filePath) {
   let storageFileAvailable = false;
   if (storageAbsolute && existsSync(storageAbsolute)) {
     const storageStats = fs.statSync(storageAbsolute);
-    storageFileAvailable = storageStats.isFile();
+    storageFileAvailable = storageStats.isFile() || storageStats.isDirectory();
   }
 
   return {
@@ -94,7 +94,7 @@ function buildDatasetSummary(data, filePath) {
     dataType: data.dataType && data.dataType.type ? data.dataType.type : null,
     storagePath: storageLocation
       || path.dirname(path.relative(DATASET_ROOT, filePath)),
-    storageDownloadPath: storageLocation,
+    storageBrowsePath: storageLocation,
     storageFileAvailable,
     generatedAt: data.generatedAt || null,
     relatedGenotype: data.relatedGenotype || null,
@@ -164,7 +164,7 @@ async function serveApi(req, res) {
   }
 }
 
-function serveDownload(req, res) {
+function serveBrowse(req, res) {
   const requestUrl = new URL(req.url, `http://${req.headers.host}`);
   const requestedPath = requestUrl.searchParams.get('path');
   const absolute = resolveStoragePath(requestedPath);
@@ -176,18 +176,38 @@ function serveDownload(req, res) {
   }
 
   const stats = fs.statSync(absolute);
-  if (!stats.isFile()) {
-    res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-    res.end('파일이 존재하지 않습니다.');
-    return;
-  }
+  const directoryPath = stats.isDirectory() ? absolute : path.dirname(absolute);
+  const entries = fs.readdirSync(directoryPath, { withFileTypes: true });
+  const items = entries
+    .sort((a, b) => {
+      if (a.isDirectory() === b.isDirectory()) return a.name.localeCompare(b.name);
+      return a.isDirectory() ? -1 : 1;
+    })
+    .map((entry) => {
+      const icon = entry.isDirectory() ? '📁' : '📄';
+      return `<li>${icon} ${entry.name}</li>`;
+    })
+    .join('');
 
-  const filename = path.basename(absolute);
-  res.writeHead(200, {
-    'Content-Type': 'application/octet-stream',
-    'Content-Disposition': `attachment; filename="${filename}"`
-  });
-  createReadStream(absolute).pipe(res);
+  res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+  res.end(`<!DOCTYPE html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>폴더 보기</title>
+    <style>
+      body { font-family: Arial, sans-serif; padding: 24px; }
+      h1 { font-size: 18px; margin-bottom: 12px; }
+      ul { list-style: none; padding: 0; }
+      li { margin-bottom: 6px; }
+    </style>
+  </head>
+  <body>
+    <h1>폴더: ${path.relative(ROOT, directoryPath)}</h1>
+    <ul>${items || '<li>폴더가 비어 있습니다.</li>'}</ul>
+  </body>
+</html>`);
 }
 
 function serveStatic(req, res) {
@@ -207,8 +227,8 @@ function serveStatic(req, res) {
 }
 
 const server = http.createServer((req, res) => {
-  if (req.url.startsWith('/api/download')) {
-    serveDownload(req, res);
+  if (req.url.startsWith('/api/browse')) {
+    serveBrowse(req, res);
     return;
   }
   if (req.url.startsWith('/api/datasets')) {

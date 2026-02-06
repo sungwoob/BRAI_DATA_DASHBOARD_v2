@@ -96,11 +96,12 @@ function renderDatasets(datasets) {
     }
     datatype.textContent = dataset.dataType || '-';
     storage.textContent = dataset.storagePath;
-    if (dataset.storageFileAvailable && dataset.storageDownloadPath) {
+    if (dataset.storageFileAvailable && dataset.storageBrowsePath) {
       const link = document.createElement('a');
-      link.href = `/api/download?path=${encodeURIComponent(dataset.storageDownloadPath)}`;
-      link.textContent = '다운로드';
-      link.setAttribute('download', '');
+      link.href = `/api/browse?path=${encodeURIComponent(dataset.storageBrowsePath)}`;
+      link.textContent = '폴더 보기';
+      link.setAttribute('target', '_blank');
+      link.setAttribute('rel', 'noopener');
       download.innerHTML = '';
       download.appendChild(link);
     } else {

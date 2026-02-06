@@ -66,6 +66,8 @@ function renderDatasets(datasets) {
     const count = clone.querySelector('.count');
     const genotypeInfo = clone.querySelector('.genotype-info');
     const genotypeSize = clone.querySelector('.genotype-size');
+    const phenotypeInfo = clone.querySelector('.phenotype-info');
+    const phenotypeCount = clone.querySelector('.phenotype-count');
     const datatype = clone.querySelector('.datatype');
     const storage = clone.querySelector('.storage');
     const download = clone.querySelector('.download');
@@ -93,6 +95,13 @@ function renderDatasets(datasets) {
     } else {
       genotypeInfo.hidden = true;
       genotypeSize.textContent = '-';
+    }
+    if (typeClass === 'phenotype' && typeof dataset.numberOfPhenotype === 'number') {
+      phenotypeInfo.hidden = false;
+      phenotypeCount.textContent = dataset.numberOfPhenotype.toLocaleString();
+    } else {
+      phenotypeInfo.hidden = true;
+      phenotypeCount.textContent = '-';
     }
     datatype.textContent = dataset.dataType || '-';
     storage.textContent = dataset.storagePath;

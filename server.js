@@ -62,6 +62,11 @@ function buildDatasetSummary(data, filePath) {
         : (data.dataType && typeof data.dataType.numberOfSNP === 'number'
             ? data.dataType.numberOfSNP
             : undefined));
+  const numberOfPhenotype = data.dataType && typeof data.dataType.numberOfPhenotype === 'number'
+    ? data.dataType.numberOfPhenotype
+    : (typeof data.numberOfPhenotype === 'number'
+        ? data.numberOfPhenotype
+        : null);
 
   const infoOfGenotype = typeof data['informationOfGenotype(Gb)'] === 'number'
     ? data['informationOfGenotype(Gb)']
@@ -90,6 +95,7 @@ function buildDatasetSummary(data, filePath) {
       return detail || data.version || '';
     })(),
     numberOfData: typeof numberOfData === 'number' ? numberOfData : null,
+    numberOfPhenotype,
     informationOfGenotypeGb: infoOfGenotype,
     dataType: data.dataType && data.dataType.type ? data.dataType.type : null,
     storagePath: storageLocation
